@@ -1,5 +1,21 @@
-# This is just an example to get you started. A typical binary package
-# uses this file as the main entry point of the application.
+##[ ndupes.nim
+=========================
+
+License: MIT, see LICENSE for details
+]##
+import os
+import system
+
+import ndupes/app
+
+
+proc main(): void =
+    var args: seq[string]
+    for i in 1 .. os.paramCount():
+        args.add(os.paramStr(i))
+    system.quit(app.run(args))
+
 
 when isMainModule:
-  echo("Hello, World!")
+    main()
+
