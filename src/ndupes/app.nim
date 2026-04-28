@@ -13,15 +13,22 @@ type
 
 
 iterator walk(paths: openarray[Path]): path_info =
-    discard
+    for path in paths:
+        if os.fileExists(path.string):
+            yield (path, )
+            continue
+        for i in dirs.walkDirRec(path):
+            yield (i, )
 
 
 proc run*(args: openarray[string]): int =
     ##[
     ]##
     let opts = options.parseargs(args)
+
+    # phase 1: collect data
     for pi in walk(opts.paths):
-        discard
+        let fi = extract.extract1(pi.f)
 
 
 when isMainModule:
