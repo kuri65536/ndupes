@@ -72,6 +72,9 @@ macro parse_all*(obj: untyped, args: typed, parsers: varargs[untyped]): void =
     var tuples = newTree(nnkTableConstr)
     for i in parsers:
         if isNil(i.fn): continue
+        #[
+        if len(i.long) < 1: continue
+        ]#
         tuples.add(newColonExpr(
             fn_str(i.long),
             newNimNode(nnkTupleConstr
@@ -92,8 +95,21 @@ macro parse_all*(obj: untyped, args: typed, parsers: varargs[untyped]): void =
                              prms, newLit(""), newLit(newSeq[string]()))
             result.add(newAssignment(newDotExpr(obj, i.sym), c0))
             continue
-        # fn(prms.getOrDefault(i.long, @[]))
+        #[
+        if len(i.long) < 1:
+            # fn(prms.getOrDefault("", @[]))
+            # obj.sym = fn(...)
+            let c2 = newCall(i.fn,
+                    newCall(bindSym"getOrDefault",
+                            prms, newLit(""), newLit(newSeq[string]())
+                    )
+                )
+            result.add(newAssignment(newDotExpr(obj, i.sym), c2))
+            continue
+        ]#
+        # fn(obj.sym, prms.getOrDefault(i.long, @[]))
         let cl = newCall(i.fn,
+                newDotExpr(obj, i.sym),
                 newCall(bindSym"getOrDefault",
                         prms, fn_str(i.long), newLit(newSeq[string]())
                 )
@@ -134,24 +150,24 @@ proc parse_verbosity*(args: seq[string]): int =
     logging.setLogFilter(lvl)
 
 
-proc parse_true*(args: seq[string]): bool =
+proc parse_true*(src: bool, args: seq[string]): bool =
     ##[
     ]##
     return len(args) > 0
 
 
-proc parse_false*(args: seq[string]): bool =
+proc parse_false*(src: bool, args: seq[string]): bool =
     ##[
     ]##
     return len(args) < 1
 
 
-proc parse_str*(args: seq[string]): string =
+proc parse_str*(src: string, args: seq[string]): string =
     ##[
     ]##
     if len(args) > 0:
         return args[0]
-    return ""
+    return src
 
 
 when isMainModule:
@@ -170,6 +186,7 @@ when isMainModule:
         (' ', "--c2", "1", parse_true, c2),
         (' ', "", "", nil, arg),
     )
+    echo("c1: " & tmp.c1 & ", c2:" & $tmp.c2 & ", args:" & tmp.arg)
 
 
   block:
