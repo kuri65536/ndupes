@@ -72,9 +72,7 @@ macro parse_all*(obj: untyped, args: typed, parsers: varargs[untyped]): void =
     var tuples = newTree(nnkTableConstr)
     for i in parsers:
         if isNil(i.fn): continue
-        #[
-        if len(i.long) < 1: continue
-        ]#
+        if i.long.strVal.len < 1: continue
         tuples.add(newColonExpr(
             fn_str(i.long),
             newNimNode(nnkTupleConstr
@@ -95,18 +93,17 @@ macro parse_all*(obj: untyped, args: typed, parsers: varargs[untyped]): void =
                              prms, newLit(""), newLit(newSeq[string]()))
             result.add(newAssignment(newDotExpr(obj, i.sym), c0))
             continue
-        #[
-        if len(i.long) < 1:
+        if i.long.strVal.len < 1:
             # fn(prms.getOrDefault("", @[]))
             # obj.sym = fn(...)
             let c2 = newCall(i.fn,
+                    newDotExpr(obj, i.sym),
                     newCall(bindSym"getOrDefault",
                             prms, newLit(""), newLit(newSeq[string]())
                     )
                 )
             result.add(newAssignment(newDotExpr(obj, i.sym), c2))
             continue
-        ]#
         # fn(obj.sym, prms.getOrDefault(i.long, @[]))
         let cl = newCall(i.fn,
                 newDotExpr(obj, i.sym),
@@ -170,23 +167,29 @@ proc parse_str*(src: string, args: seq[string]): string =
     return src
 
 
-when isMainModule:
-  type
-    testvar = ref object of RootObj
-        c1: string
-        c2: bool
-        arg: seq[string]
+proc parse_strs*(src: seq[string], args: seq[string]): seq[string] =
+    ##[
+    ]##
+    result = src
+    for i in args:
+        result.add(i)
 
+
+when isMainModule:
+  template o(a, b: untyped) =
+    echo(a & "c1: " & b.c1 & ", c2:" & $b.c2 & ", args:" & $b.arg)
+    
 
   proc test1(): void =
-    #ar tmp = (c1: "", c2: false, arg: @[""])  # testvar()
-    var tmp = testvar()
-    parse_all(tmp, @["test", "--c1", "a", "--c2"],
+    var tmp = (c1: "", c2: false, arg: @[""])  # testvar()
+    o("before: ", tmp)
+    #ar tmp = testvar()
+    parse_all(tmp, @["test", "--c1", "a", "--c2", "abc", "bcd"],
         (' ', "--c1", "", parse_str, c1),
         (' ', "--c2", "1", parse_true, c2),
-        (' ', "", "", nil, arg),
+        (' ', "", "", parse_strs, arg),
     )
-    echo("c1: " & tmp.c1 & ", c2:" & $tmp.c2 & ", args:" & tmp.arg)
+    o("after : ", tmp)
 
 
   block:
