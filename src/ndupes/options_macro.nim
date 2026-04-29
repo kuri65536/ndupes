@@ -145,3 +145,33 @@ proc parse_false*(args: seq[string]): bool =
     ]##
     return len(args) < 1
 
+
+proc parse_str*(args: seq[string]): string =
+    ##[
+    ]##
+    if len(args) > 0:
+        return args[0]
+    return ""
+
+
+when isMainModule:
+  type
+    testvar = ref object of RootObj
+        c1: string
+        c2: bool
+        arg: seq[string]
+
+
+  proc test1(): void =
+    #ar tmp = (c1: "", c2: false, arg: @[""])  # testvar()
+    var tmp = testvar()
+    parse_all(tmp, @["test", "--c1", "a", "--c2"],
+        (' ', "--c1", "", parse_str, c1),
+        (' ', "--c2", "1", parse_true, c2),
+        (' ', "", "", nil, arg),
+    )
+
+
+  block:
+    test1()
+
