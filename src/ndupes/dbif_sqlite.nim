@@ -88,9 +88,20 @@ proc save*(db: DBInfo, src: var common.file_info): void =
 
 proc update*(db: DBInfo, uid: array[16, uint8], src: common.file_info): void =
     ##[ update DB from new value
-    ]##
-    discard
 
+        no update with uid and path
+    ]##
+    dbc.exec(db.conn, sql"""
+        update file set inode = ?, size = ?, lcnt = ?,
+                        chrh = ?, chrt = ?, hash = ?,
+                        error = ?, done = ?
+               where uid = ?
+        """,
+        src.inode, src.size, src.count,
+        src.head, src.tail, hash2hex(src.hash),
+        src.error, src.done,
+        uid2hex(uid)
+    )
 
 
 proc load*(db: DBInfo, f: Path): common.file_info =
