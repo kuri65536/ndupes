@@ -6,6 +6,7 @@ License: MIT, see LICENSE
 import std/paths
 
 import options
+import dbif_sqlite as db
 
 
 type
@@ -25,6 +26,9 @@ proc run*(args: openarray[string]): int =
     ##[
     ]##
     let opts = options.parseargs(args)
+
+    let tmp = db.open(opts.tmpdb)
+    defer: db.close(tmp)
 
     # phase 1: collect data
     for pi in walk(opts.paths):
