@@ -3,16 +3,37 @@
 
 License: MIT, see LICENSE
 ]##
+import std/os
 import std/paths
 
-
-type
-  file_info* = ref object of RootObj
-    discard
+import common as common
 
 
-proc extract1*(src: Path): file_info =
+proc normalize_path(src: Path, f_abs: bool): Path =
+    if f_abs:
+        if src.isAbsolute():
+            return src
+        return src.absolutePath()
+    if not src.isAbsolute():
+        return src
+    return src.relativePath(paths.getCurrentDir())
+
+
+proc extract1*(src: Path, f_abs: bool): common.file_info =
     ##[
     ]##
-    discard
+    let src = normalize_path(src, f_abs)
+
+    let fi = os.getFileInfo(src.string, false)
+    if fi.isSpecial:
+        return nil
+    if fi.kind in {pcLinkToFile, pcLinkToDir}:
+        return nil
+
+    return common.file_info(
+        size: fi.size,
+        count: fi.linkCount,
+        inode: fi.id.file,
+        path: src,
+    )
 

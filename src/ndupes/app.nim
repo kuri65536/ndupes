@@ -5,8 +5,8 @@ License: MIT, see LICENSE
 ]##
 import std/paths
 
-import options
 import dbif_sqlite as db
+import options
 
 
 type
@@ -32,7 +32,12 @@ proc run*(args: openarray[string]): int =
 
     # phase 1: collect data
     for pi in walk(opts.paths):
-        let fi = extract.extract1(pi.f)
+        var fi1 = extract.extract1(pi.f, true)
+        if isNil(fi1):
+            continue
+        block:
+            echo("scanned and saved... " & pi.f.string)
+            db.save(tmp, fi1)
 
 
 when isMainModule:
