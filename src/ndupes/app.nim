@@ -35,9 +35,14 @@ proc run*(args: openarray[string]): int =
         var fi1 = extract.extract1(pi.f, true)
         if isNil(fi1):
             continue
-        block:
+        let fi0 = db.load(tmp, fi1.path)
+        if isNil(fi0):
             echo("scanned and saved... " & pi.f.string)
             db.save(tmp, fi1)
+            continue
+        block:
+            echo("detected as new one. " & pi.f.string)
+            db.update(tmp, fi0.uid, fi1)
 
 
 when isMainModule:

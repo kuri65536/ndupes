@@ -85,3 +85,28 @@ proc save*(db: DBInfo, src: var common.file_info): void =
         hs, src.error, src.done, src.path.string
     )
 
+
+proc update*(db: DBInfo, uid: array[16, uint8], src: common.file_info): void =
+    ##[ update DB from new value
+    ]##
+    discard
+
+
+
+proc load*(db: DBInfo, f: Path): common.file_info =
+    ##[ load a record from `db` with `path` as the key
+    ]##
+    let qry = "SELECT * FROM file WHERE path = ?"
+    debug("scan:get-row:select: " & f.string)
+    if not dbc.tryExec(db.conn, dbc.sql(qry), f.string):
+        try:
+            dbc.dbError(db.conn)
+        except DBError:
+            error(getCurrentExceptionMsg())
+        return nil
+    let x = dbc.getRow(db.conn, dbc.sql(qry), f.string)
+    if len(x) < 1 or len(x[0]) < 1:
+        return nil
+    debug("scan:get-row:got: " & $x)
+    return common.newFileInfo(x)
+
