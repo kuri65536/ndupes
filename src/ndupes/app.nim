@@ -3,8 +3,12 @@
 
 License: MIT, see LICENSE
 ]##
+import std/dirs
+import std/os
 import std/paths
 
+import common
+import extract
 import dbif_sqlite as db
 import options
 
@@ -39,6 +43,9 @@ proc run*(args: openarray[string]): int =
         if isNil(fi0):
             echo("scanned and saved... " & pi.f.string)
             db.save(tmp, fi1)
+            continue
+        if common.equals(fi0, fi1):
+            echo("already scanned  ... " & pi.f.string)
             continue
         block:
             echo("detected as new one. " & pi.f.string)

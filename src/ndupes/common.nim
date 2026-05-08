@@ -54,4 +54,24 @@ proc newFileinfo*(src: openarray[string]): file_info =
     get_hex(result.hash, src[6])
 
 
+proc equals*(a, b: file_info): bool =
+    ##[ compare two file_info
+    ]##
+    debug("scan:equals:" & a.path.string & " vs " & b.path.string)
+    if a.path != b.path:
+        echo("!= path"); return false
+    debug("scan:equals:" & $a.inode & " vs " & $b.inode)
+    if a.inode != b.inode:
+        echo("!= inode"); return false
+    if a.size != b.size:
+        echo("!= size"); return false
+    if a.count != b.count:
+        echo("!= count"); return false
+    if a.head != b.head:
+        echo("!= head"); return false
+    if a.tail != b.tail:
+        echo("!= tail"); return false
+    return true
+
+
 
