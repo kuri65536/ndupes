@@ -8,6 +8,7 @@ import std/os
 import std/paths
 
 import common
+import calchash
 import extract
 import dbif_sqlite as db
 import options
@@ -50,6 +51,11 @@ proc run*(args: openarray[string]): int =
         block:
             echo("detected as new one. " & pi.f.string)
             db.update(tmp, fi0.uid, fi1)
+
+    # phase 2: calculate hash
+    let ret2 = calchash.run(tmp, (calc_method(opts.n_method), opts.size))
+    if ret2 != 0 or opts.runflags.contains(until_filter):
+        return ret2
 
 
 when isMainModule:

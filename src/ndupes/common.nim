@@ -9,6 +9,10 @@ import std/strutils
 
 
 type
+  calc_method* = enum
+    method_md5
+    method_sha256
+
   file_info* = ref object of RootObj
     uid*: array[16, uint8]
     size*: int64
