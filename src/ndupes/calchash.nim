@@ -5,6 +5,10 @@ License: MIT, see LICENSE
 ]##
 import std/logging
 import std/paths
+import std/md5
+
+when defined(use_sha2):
+  import std/sha2
 
 import common
 import dbif_sqlite as db
@@ -14,8 +18,44 @@ type
   optscalc* = tuple[n: common.calc_method, size: int]
 
 
-proc calc(src: Path, n: common.calc_method): array[32, uint8] =
+when defined(use_sha2):
+  proc filesha256(src: Path): array[32, uint8] =
     discard
+
+
+proc filemd5*(src: Path, blk = 8192): array[32, uint8] =
+    var ctx: MD5Context
+    md5.md5Init(ctx)
+
+    var fp: File
+    if not system.open(fp, src.string):
+        raise newException(IOError, "")
+    defer: fp.close()
+
+    while true:
+        var buf = newSeq[uint8](blk)
+        let n = readBuffer(fp, addr(buf[0]), blk)
+        if n < 1:
+            break
+        buf.setLen(n)
+        md5.md5Update(ctx, buf)
+        if n < blk:
+            break
+
+    var tmp: array[0..15, uint8]
+    md5.md5Final(ctx, tmp)
+    for i in 0 .. 15:
+        result[i] = tmp[i]
+
+
+proc calc(src: Path, n: common.calc_method): array[32, uint8] =
+    when defined(use_sha2):
+        if n == method_sha256:
+            return filesha256(src)
+    else:
+        if n == method_sha256:
+            warn("specified: sha256 not enabled in build, fallback to md5")
+    return filemd5(src)
 
 
 proc run*(src: db.DBInfo, opts: optscalc): int =
@@ -30,8 +70,13 @@ proc run*(src: db.DBInfo, opts: optscalc): int =
         let fi = db.get_unhash(src, opts.size)
         if isNil(fi):
             break
-        let hash = block:
+        let hash = try:
                 calc(fi.path, opts.n)
+            except:
+                var tmp = fi
+                common.mark_error(tmp)
+                db.update(src, fi.uid, tmp)
+                continue
         block:
             info("hash:update to => " & $hash)
             var tmp = fi

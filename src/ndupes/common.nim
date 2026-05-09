@@ -78,4 +78,8 @@ proc equals*(a, b: file_info): bool =
     return true
 
 
+proc mark_error*(src: var file_info): void =
+    ##[ mark the record with error
+    ]##
+    src.error = (src.error + 1) and 0x7F
 
