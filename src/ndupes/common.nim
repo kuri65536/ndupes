@@ -90,3 +90,9 @@ proc mark_error*(src: var file_info): void =
     ]##
     src.error = (src.error + 1) and 0x7F
 
+
+proc mark_done*(src: var file_info): void =
+    ##[ mark the record with error
+    ]##
+    src.done = (src.done + 1) and 0x7F
+
