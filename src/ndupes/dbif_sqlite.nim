@@ -155,3 +155,39 @@ proc get_unhash*(db: DBInfo, size: int): common.file_info =
     echo("get_unhash:got" & $x)
     return common.newFileInfo(x)
 
+
+proc get_removes*(db: DBInfo): seq[common.file_info] =
+    ##[ - get unproc size and hash
+    ]##
+    let qry1 = """
+        SELECT size, hash FROM file
+        WHERE error < 1 and done < 1
+        GROUP BY size, hash
+        HAVING COUNT(*) > 1
+        limit 1
+    """
+    echo("get_removes:find doubled files...")
+    if not dbc.tryExec(db.conn, dbc.sql(qry1)):
+        try:
+            dbc.dbError(db.conn)
+        except DBError:
+            error(getCurrentExceptionMsg())
+        return @[]
+    let size_hash = dbc.getRow(db.conn, dbc.sql(qry1))
+    if len(size_hash) < 1:
+        return @[]
+    let size = size_hash[0]
+    let hash = size_hash[1]
+    if len(size) < 1 or len(hash) < 1:
+        return @[]
+    echo("get_removes:found doubled..." & size & "-" & hash)
+
+    let qry2 = """
+        SELECT * FROM file
+        WHERE size = ? and hash = ?
+    """
+    result = @[]
+    for x in dbc.fastRows(db.conn, dbc.sql(qry2), size, hash):
+        let fi = common.newFileInfo(x)
+        result.add(fi)
+
