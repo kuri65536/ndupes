@@ -121,3 +121,37 @@ proc load*(db: DBInfo, f: Path): common.file_info =
     debug("scan:get-row:got: " & $x)
     return common.newFileInfo(x)
 
+
+proc get_unhash*(db: DBInfo, size: int): common.file_info =
+    ##[ find the unhash record from `db`
+
+        for reduce memory usage, this func just get one record.
+    ]##
+    let hash = block:
+        var tmp: array[32, uint8]
+        hash2hex(tmp)
+    #cho("get_unhash:" & $size & "-" & hash)
+    let qry = """
+        SELECT * FROM file
+        WHERE size >= ?
+          AND hash = ?
+          AND error < 1
+          AND size IN (
+            SELECT size FROM file GROUP BY size
+            HAVING COUNT(*) > 1
+          )
+        ORDER BY size
+        LIMIT 1
+    """
+    if not dbc.tryExec(db.conn, dbc.sql(qry), size, hash):
+        try:
+            dbc.dbError(db.conn)
+        except DBError:
+            error(getCurrentExceptionMsg())
+        return nil
+    let x = dbc.getRow(db.conn, dbc.sql(qry), size, hash)
+    if len(x) < 1 or len(x[0]) < 1:
+        return nil
+    echo("get_unhash:got" & $x)
+    return common.newFileInfo(x)
+
