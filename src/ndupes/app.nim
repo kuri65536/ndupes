@@ -12,6 +12,7 @@ import calchash
 import extract
 import dbif_sqlite as db
 import options
+import removedups
 
 
 type
@@ -56,6 +57,9 @@ proc run*(args: openarray[string]): int =
     let ret2 = calchash.run(tmp, (calc_method(opts.n_method), opts.size))
     if ret2 != 0 or opts.runflags.contains(until_filter):
         return ret2
+
+    # phase 3: remove dups
+    return removedups.run(tmp, (opts.runflags.contains(apply), ))
 
 
 when isMainModule:

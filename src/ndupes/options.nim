@@ -12,6 +12,7 @@ import options_macro
 
 type
   run_options* = enum
+    apply
     until_hash
 
   Options* = ref object of RootObj
@@ -62,6 +63,7 @@ proc parseargs*(src: openarray[string]): Options =
         tmpdb: Path("ndupes.db"),
     )
     options_macro.parse_all(result, args,
+        (' ', "--apply", $apply, parse_flag, runflags),
         (' ', "--until-hash", $until_hash, parse_flag, runflags),
         (' ', "--db", "", parse_path, tmpdb),
         (' ', "--method", "", parse_method, n_method),
