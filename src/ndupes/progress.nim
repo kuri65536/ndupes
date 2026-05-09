@@ -3,6 +3,7 @@
 
 License: MIT, see LICENSE
 ]##
+import std/logging
 import std/paths
 import std/terminal
 import std/times
@@ -10,10 +11,17 @@ import std/strutils
 
 
 type
-    prog_stat* = tuple[update: bool, tty, filepos: int, cputime: float]
-
+  prog_stat* = object of RootObj
+    update: bool
+    filepos: int
+    tty, width: int
+    cputime: float
 
 let
+    tty_none = 0
+    tty_term = 1
+    tty_file = 2
+    tty_width_default = 80
     thsec = (tty: 2.0,
              log: 10.0, )
     thsize = (large_file:  1000_000,
@@ -22,41 +30,58 @@ let
               pct_log: 10, )
 
 
-proc update_timing_time(tty: int, prev: float): (bool, float) =
-    let cur = times.cpuTime()
+proc terminal_info(): tuple[ttytype, ttywidth: int] =
+    if not terminal.isatty(stderr):
+        return (tty_file, tty_width_default)
+    let width = terminal.terminalWidth()
+    if width < 1:
+        return (tty_term, tty_width_default)
+    debug("progress: got width" & $width)
+    return (tty_term, width)
+
+
+proc update_timing_time(tty: int, cur, prev: float): (bool, float) =
     if prev < 1:
         return (true, cur)
     let delta = cur - prev
-    if tty == 2 and delta > thsec.tty:
+    if tty == tty_term and delta > thsec.tty:
         return (true, cur)
-    if tty == 1 and delta > thsec.log:
+    if tty == tty_file and delta > thsec.log:
         return (true, cur)
     return (false, prev)
 
 
 proc update_timing(cur, size: int, prev: prog_stat): prog_stat =
-    let tty = block:
-        if prev.tty > 0:              prev.tty
-        elif terminal.isatty(stderr): 1
-        else:                         2
-    let (f1, new_time) = update_timing_time(tty, prev.cputime)
+    result = prev
+    let curtime = times.cpuTime()
+    if prev.tty <= tty_none:
+        (result.tty, result.width) = terminal_info()
+        result.update = true; return
+
+    let tty = prev.tty
+    let (f1, new_time) = update_timing_time(tty, curtime, prev.cputime)
+
+    proc update(): prog_stat =
+        result = prev
+        (result.update, result.filepos, result.cputime) = (true, cur, new_time)
+
     if f1:
-        return (true, tty, prev.filepos, new_time)
+        return update()
 
     if prev.filepos < 1:
-        return (true, tty, cur, new_time)
+        return update()
 
     let delta = cur - prev.filepos
-    if tty == 1 and delta > (size * thsize.pct_log) div 100:
-        return (true, tty, cur, new_time)
-    elif tty == 1:
-        return (false, tty, prev.filepos, prev.cputime)
+    if tty == tty_file and delta > (size * thsize.pct_log) div 100:
+        return update()
+    elif tty == tty_file:
+        result.update = false; return result
 
     if size > thsize.large_file and delta > thsize.large_delta:
-        return (true, tty, cur, new_time)
+        return update()
     if delta > (size * thsize.pct_tty) div 100:
-        return (true, tty, cur, new_time)
-    return (false, tty, prev.filepos, prev.cputime)
+        return update()
+    result.update = false; return result
 
 
 proc show_hash*(src: Path, cur, size: int, prev: prog_stat): prog_stat =
@@ -69,11 +94,20 @@ proc show_hash*(src: Path, cur, size: int, prev: prog_stat): prog_stat =
     let dpct = (cur * 1000) div size
     var pct = "(" & align($(dpct div 10), 3) & "." & $(dpct mod 10) & "%) "
 
-    var fn = src.string
-    fn = if len(fn) < 50: fn
-         else:            "..." & fn[^47 .. ^1]
-
     var msg = $size
-    msg = align($cur, len(msg)) & "/" & msg & pct & fn
-    stderr.write(msg & "\n")
+    msg = align($cur, len(msg)) & "/" & msg & pct
+
+    let n_len = result.width - len(msg) - 1
+    var fn = src.string
+    if len(fn) >= n_len:
+        fn = fn[^n_len .. ^1]
+        fn = "..." & fn[3 ..^ 1]
+
+    msg &= fn
+    if result.tty == tty_file:
+        stderr.write(msg & "\n")
+    else:
+        stderr.write("\r\e[K" & msg)
+        if dpct >= 1000:
+            stderr.write("\n")
 

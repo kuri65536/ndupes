@@ -25,6 +25,7 @@ when defined(use_sha2):
 
 
 proc filemd5*(src: Path, size: int, blk = 8192): array[32, uint8] =
+    debug("hash: enter, " & $size & ":" & src.string)
     var ctx: MD5Context
     md5.md5Init(ctx)
 
@@ -51,6 +52,7 @@ proc filemd5*(src: Path, size: int, blk = 8192): array[32, uint8] =
     md5.md5Final(ctx, tmp)
     for i in 0 .. 15:
         result[i] = tmp[i]
+    debug("hash: end, " & $result[0] & $result[1] & $result[2])
 
 
 proc calc(src: Path, size: int, n: common.calc_method): array[32, uint8] =
