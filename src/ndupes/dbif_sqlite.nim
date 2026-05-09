@@ -133,7 +133,6 @@ proc get_unhash*(db: DBInfo, size: int): common.file_info =
     let hash = block:
         var tmp: array[32, uint8]
         hash2hex(tmp)
-    #cho("get_unhash:" & $size & "-" & hash)
     let qry = """
         SELECT * FROM file
         WHERE size >= ?
@@ -155,7 +154,7 @@ proc get_unhash*(db: DBInfo, size: int): common.file_info =
     let x = dbc.getRow(db.conn, dbc.sql(qry), size, hash)
     if len(x) < 1 or len(x[0]) < 1:
         return nil
-    echo("get_unhash:got" & $x)
+    debug("db:get_unhash:got" & $x)
     return common.newFileInfo(x)
 
 
@@ -169,7 +168,7 @@ proc get_removes*(db: DBInfo): seq[common.file_info] =
         HAVING COUNT(*) > 1
         limit 1
     """
-    echo("get_removes:find doubled files...")
+    debug("db:get_removes:find doubled files...")
     if not dbc.tryExec(db.conn, dbc.sql(qry1)):
         try:
             dbc.dbError(db.conn)
@@ -183,7 +182,7 @@ proc get_removes*(db: DBInfo): seq[common.file_info] =
     let hash = size_hash[1]
     if len(size) < 1 or len(hash) < 1:
         return @[]
-    echo("get_removes:found doubled..." & size & "-" & hash)
+    debug("db:get_removes:found doubled..." & size & "-" & hash)
 
     let qry2 = """
         SELECT * FROM file

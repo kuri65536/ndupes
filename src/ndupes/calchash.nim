@@ -56,6 +56,7 @@ proc filemd5*(src: Path, size: int, blk = 8192): array[32, uint8] =
 
 
 proc calc(src: Path, size: int, n: common.calc_method): array[32, uint8] =
+    stdout.write("hash  : " & src.string & "\n")
     when defined(use_sha2):
         if n == method_sha256:
             return filesha256(src)

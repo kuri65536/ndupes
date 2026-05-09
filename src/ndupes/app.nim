@@ -43,29 +43,29 @@ proc run*(args: openarray[string]): int =
         return dumpdb.run(tmp, opts.dumpflags)
     info("mode: normal...")
 
-    # phase 1: collect data
+    stdout.write("### phase 1: collect files...\n")
     for pi in walk(opts.paths):
         var fi1 = extract.extract1(pi.f, true)
         if isNil(fi1):
             continue
         let fi0 = db.load(tmp, fi1.path)
         if isNil(fi0):
-            echo("scanned and saved... " & pi.f.string)
+            stdout.write("listup: scanned and saved... " & pi.f.string & "\n")
             db.save(tmp, fi1)
             continue
         if common.equals(fi0, fi1):
-            echo("already scanned  ... " & pi.f.string)
+            stdout.write("listup: already scanned  ... " & pi.f.string & "\n")
             continue
         block:
-            echo("detected as new one. " & pi.f.string)
+            stdout.write("listup: detected as new one. " & pi.f.string & "\n")
             db.update(tmp, fi0.uid, fi1)
 
-    # phase 2: calculate hash
+    stdout.write("### phase 2: calculate hash...\n")
     let ret2 = calchash.run(tmp, (calc_method(opts.n_method), opts.size))
     if ret2 != 0 or opts.runflags.contains(until_hash):
         return ret2
 
-    # phase 3: remove dups
+    stdout.write("### phase 3: remove duplicates...\n")
     return removedups.run(tmp, (opts.runflags.contains(apply), ))
 
 

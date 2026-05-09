@@ -27,7 +27,7 @@ proc dumprec(src: common.file_info, opts: set[common.dump_options]): void =
     line &= ", " & align($src.error, 2)
     line &= ", " & align($src.done, 2)
     line &= ", " & path_fmt(src.path)
-    echo(line[2 ..^ 1])
+    stdout.write(line[2 ..^ 1] & "\n")
 
 
 proc fetch(src: db.DBInfo, prev: common.file_info,

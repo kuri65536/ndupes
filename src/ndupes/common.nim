@@ -70,18 +70,18 @@ proc equals*(a, b: file_info): bool =
     ]##
     debug("scan:equals:" & a.path.string & " vs " & b.path.string)
     if a.path != b.path:
-        echo("!= path"); return false
+        error("listup:equals: ??? != path"); return false
     debug("scan:equals:" & $a.inode & " vs " & $b.inode)
     if a.inode != b.inode:
-        echo("!= inode"); return false
+        debug("listup:equals: != inode"); return false
     if a.size != b.size:
-        echo("!= size"); return false
+        debug("listup:equals: != size"); return false
     if a.count != b.count:
-        echo("!= count"); return false
+        debug("listup:equals: != count"); return false
     if a.head != b.head:
-        echo("!= head"); return false
+        debug("listup:equals: != head"); return false
     if a.tail != b.tail:
-        echo("!= tail"); return false
+        debug("listup:equals: != tail"); return false
     return true
 
 

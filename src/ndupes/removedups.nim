@@ -17,7 +17,8 @@ type
 
 proc dump(src, dst: common.file_info, f: bool): void =
     let st = if f: "!: " else: ".: "
-    warn("hardlink" & st & dst.path.string & "<=" & src.path.string)
+    let (d, s) = (dst.path.string, src.path.string)
+    stdout.write("hardlink" & st & d & "<=" & s & "\n")
 
 
 proc hardlink(tmp: db.DBInfo, src, dst: common.file_info,
