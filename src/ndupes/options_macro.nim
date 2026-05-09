@@ -159,6 +159,16 @@ proc parse_false*(src: bool, args: seq[string]): bool =
     return len(args) < 1
 
 
+proc parse_int*(src: int, args: seq[string]): int =
+    ##[
+    ]##
+    for i in args:
+        let tmp = try: parseInt(i)
+                  except ValueError: continue
+        return tmp
+    return src
+
+
 proc parse_str*(src: string, args: seq[string]): string =
     ##[
     ]##
