@@ -6,6 +6,7 @@ License: MIT, see LICENSE
 import std/paths
 import std/terminal
 import std/times
+import std/strutils
 
 
 type
@@ -65,5 +66,14 @@ proc show_hash*(src: Path, cur, size: int, prev: prog_stat): prog_stat =
     if not result.update:
         return
 
-    let msg = src.string
+    let dpct = (cur * 1000) div size
+    var pct = "(" & align($(dpct div 10), 3) & "." & $(dpct mod 10) & "%) "
+
+    var fn = src.string
+    fn = if len(fn) < 50: fn
+         else:            "..." & fn[^47 .. ^1]
+
+    var msg = $size
+    msg = align($cur, len(msg)) & "/" & msg & pct & fn
     stderr.write(msg & "\n")
+
