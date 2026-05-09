@@ -115,7 +115,7 @@ macro parse_all*(obj: untyped, args: typed, parsers: varargs[untyped]): void =
         result.add(newAssignment(newDotExpr(obj, i.sym), cl))
 
 
-proc parse_verbosity*(args: seq[string]): int =
+proc parse_verbosity*(src: int, args: seq[string]): int =
     ##[ setups the verbosity of the app console
     ]##
     let lvl = block:
@@ -143,7 +143,10 @@ proc parse_verbosity*(args: seq[string]): int =
           of "warning": lvlWarn
           of "warn": lvlWarn
           else:      lvlWarn
-    logging.addHandler(logging.newConsoleLogger())
+    if src != int(lvl):
+        result = int(lvl)
+    if len(logging.getHandlers()) < 1:
+        logging.addHandler(logging.newConsoleLogger())
     logging.setLogFilter(lvl)
 
 
