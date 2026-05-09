@@ -12,6 +12,7 @@ when defined(use_sha2):
 
 import common
 import dbif_sqlite as db
+import progress
 
 
 type
@@ -23,7 +24,7 @@ when defined(use_sha2):
     discard
 
 
-proc filemd5*(src: Path, blk = 8192): array[32, uint8] =
+proc filemd5*(src: Path, size: int, blk = 8192): array[32, uint8] =
     var ctx: MD5Context
     md5.md5Init(ctx)
 
@@ -32,11 +33,15 @@ proc filemd5*(src: Path, blk = 8192): array[32, uint8] =
         raise newException(IOError, "")
     defer: fp.close()
 
+    var cur = 0
+    var stat: progress.prog_stat
     while true:
         var buf = newSeq[uint8](blk)
         let n = readBuffer(fp, addr(buf[0]), blk)
         if n < 1:
             break
+        cur += n
+        stat = progress.show_hash(src, cur, size, stat)
         buf.setLen(n)
         md5.md5Update(ctx, buf)
         if n < blk:
@@ -48,14 +53,14 @@ proc filemd5*(src: Path, blk = 8192): array[32, uint8] =
         result[i] = tmp[i]
 
 
-proc calc(src: Path, n: common.calc_method): array[32, uint8] =
+proc calc(src: Path, size: int, n: common.calc_method): array[32, uint8] =
     when defined(use_sha2):
         if n == method_sha256:
             return filesha256(src)
     else:
         if n == method_sha256:
             warn("specified: sha256 not enabled in build, fallback to md5")
-    return filemd5(src)
+    return filemd5(src, size)
 
 
 proc run*(src: db.DBInfo, opts: optscalc): int =
@@ -71,7 +76,7 @@ proc run*(src: db.DBInfo, opts: optscalc): int =
         if isNil(fi):
             break
         let hash = try:
-                calc(fi.path, opts.n)
+                calc(fi.path, fi.size, opts.n)
             except:
                 var tmp = fi
                 common.mark_error(tmp)
