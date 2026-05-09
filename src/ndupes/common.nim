@@ -9,12 +9,14 @@ import std/strutils
 
 
 type
+  uid_type* = distinct array[16, uint8]
+
   calc_method* = enum
     method_md5
     method_sha256
 
   file_info* = ref object of RootObj
-    uid*: array[16, uint8]
+    uid*: uid_type
     size*: int64
     count*: int
     inode*: int64
@@ -54,7 +56,7 @@ proc newFileinfo*(src: openarray[string]): file_info =
         done: int8(parseInt(src[8]) and 0x7F),
         path: Path(src[9]),
     )
-    get_hex(result.uid, src[0])
+    get_hex(array[16, uint8](result.uid), src[0])
     get_hex(result.hash, src[6])
 
 

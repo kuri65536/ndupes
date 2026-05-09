@@ -17,8 +17,8 @@ type
     conn: dbc.DbConn
 
 
-proc uid2hex(s: array[16, uint8]): string =
-    for n, i in s:
+proc uid2hex(s: common.uid_type): string =
+    for n, i in array[16, uint8](s):
         if [6, 9].contains(n): result &= "-"
         result &= toHex(i, 2)
 
@@ -73,7 +73,7 @@ proc close*(src: DBInfo): void =
 proc save*(db: DBInfo, src: var common.file_info): void =
     ##[ save new file record
     ]##
-    let id = uid2hex(uid.gen())
+    let id = uid2hex(uid_type(uid.gen()))
     let hs = hash2hex(src.hash)
     dbc.exec(db.conn, sql"""
         INSERT INTO file values(
@@ -86,7 +86,7 @@ proc save*(db: DBInfo, src: var common.file_info): void =
     )
 
 
-proc update*(db: DBInfo, uid: array[16, uint8], src: common.file_info): void =
+proc update*(db: DBInfo, uid: uid_type, src: common.file_info): void =
     ##[ update DB from new value
 
         no update with uid and path
