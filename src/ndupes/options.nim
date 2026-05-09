@@ -14,9 +14,11 @@ import options_macro
 type
   run_options* = enum
     apply
+    dump
     until_hash
 
   Options* = ref object of RootObj
+    dumpflags*: set[dump_options]
     n_method*: common.calc_method
     paths*: seq[Path]
     size*: int
@@ -29,6 +31,7 @@ proc parse_flag(src: set[run_options], opts: seq[string]): set[run_options] =
     var src = src
     for i in low(run_options) .. high(run_options):
         if opts.contains($i):
+            warn("option found for " & $i & ":" & $opts)
             src.incl(i)
             return src
     return src
@@ -71,6 +74,7 @@ proc parseargs*(src: openarray[string]): Options =
         (' ', "--vvvv", "10", parse_verbosity, verbosity),
         (' ', "--vvvvv", "0", parse_verbosity, verbosity),
         (' ', "--apply", $apply, parse_flag, runflags),
+        (' ', "--dump", $dump, parse_flag, runflags),
         (' ', "--until-hash", $until_hash, parse_flag, runflags),
         (' ', "--db", "", parse_path, tmpdb),
         (' ', "--method", "", parse_method, n_method),

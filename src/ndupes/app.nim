@@ -4,11 +4,13 @@
 License: MIT, see LICENSE
 ]##
 import std/dirs
+import std/logging
 import std/os
 import std/paths
 
 import common
 import calchash
+import dumpdb
 import extract
 import dbif_sqlite as db
 import options
@@ -35,6 +37,11 @@ proc run*(args: openarray[string]): int =
 
     let tmp = db.open(opts.tmpdb)
     defer: db.close(tmp)
+
+    if opts.runflags.contains(dump):
+        info("mode: dump record...")
+        return dumpdb.run(tmp, opts.dumpflags)
+    info("mode: normal...")
 
     # phase 1: collect data
     for pi in walk(opts.paths):

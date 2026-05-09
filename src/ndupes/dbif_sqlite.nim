@@ -191,3 +191,25 @@ proc get_removes*(db: DBInfo): seq[common.file_info] =
         let fi = common.newFileInfo(x)
         result.add(fi)
 
+
+proc get_all*(db: DBInfo, uid: common.uid_type): common.file_info =
+    ##[ - get unproc size and hash
+    ]##
+    let uid = uid2hex(uid)
+    let qry1 = """
+        SELECT * FROM file
+        WHERE uid > ?
+        ORDER BY uid
+        ASC limit 1;
+    """
+    if not dbc.tryExec(db.conn, dbc.sql(qry1), uid):
+        try:
+            dbc.dbError(db.conn)
+        except DBError:
+            error(getCurrentExceptionMsg())
+        return nil
+    let row = dbc.getRow(db.conn, dbc.sql(qry1), uid)
+    if len(row) < 1 or len(row[0]) < 1:
+        return nil
+    return common.newFileInfo(row)
+

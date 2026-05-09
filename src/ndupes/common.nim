@@ -15,6 +15,11 @@ type
     method_md5
     method_sha256
 
+  dump_options* = enum
+    all_records
+    dup_level1
+    dup_level2
+
   file_info* = ref object of RootObj
     uid*: uid_type
     size*: int64
@@ -29,7 +34,7 @@ type
 
 
 proc get_hex(buf: var openarray[uint8], src: string): void =
-    echo("parse..." & src)
+    debug("parse..." & src)
     var i = 0
     var tmp = ""
     for ch in src:
