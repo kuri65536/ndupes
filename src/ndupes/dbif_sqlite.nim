@@ -33,7 +33,10 @@ proc has_table*(conn: dbc.DbConn): bool =
     let qry = """
         SELECT * FROM sqlite_master WHERE name = "file"
         """
-    for x in dbc.fastRows(conn, dbc.sql(qry)):
+    if not dbc.tryExec(conn, dbc.sql(qry)):
+        return true
+    let x = dbc.getRow(conn, dbc.sql(qry))
+    if len(x) > 0 and len(x[0]) > 0:
         return true
     dbc.exec(conn, sql"""
         create table file (
@@ -80,7 +83,7 @@ proc save*(db: DBInfo, src: var common.file_info): void =
             ?, ?, ?, ?,
             ?, ?,
             ?, ?, ?, ?)""",
-        id, src.inode, src.count, src.size,
+        id, src.inode, src.size, src.count,
         src.head, src.tail,
         hs, src.error, src.done, src.path.string
     )
