@@ -90,5 +90,7 @@ proc run*(src: db.DBInfo, opts: optscalc): int =
             var tmp = fi
             tmp.hash = hash
             db.update(src, fi.uid, tmp)
+
+        discard db.update_hash_sameinode(src, fi.inode, fi.hash)
     return 0
 

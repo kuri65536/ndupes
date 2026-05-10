@@ -142,6 +142,7 @@ proc get_unhash*(db: DBInfo, size: int): common.file_info =
             SELECT size FROM file GROUP BY size
             HAVING COUNT(*) > 1
           )
+        GROUP BY inode
         ORDER BY size
         LIMIT 1
     """
@@ -156,6 +157,28 @@ proc get_unhash*(db: DBInfo, size: int): common.file_info =
         return nil
     debug("db:get_unhash:got" & $x)
     return common.newFileInfo(x)
+
+
+proc update_hash_sameinode*(db: DBInfo, inode: int, hash: array[32, uint8]
+                            ): int =
+    ##[
+    ]##
+    let hash0 = block:
+        var tmp: array[32, uint8]
+        hash2hex(tmp)
+    let hash_new = hash2hex(hash)
+    let qry = """
+        UPDATE file
+          SET hash = ?
+          WHERE inode = ? AND hash = ?
+    """
+    if not dbc.tryExec(db.conn, dbc.sql(qry), hash_new, inode, hash0):
+        try:
+            dbc.dbError(db.conn)
+        except DBError:
+            error(getCurrentExceptionMsg())
+            return 1
+    return 0
 
 
 proc get_removes*(db: DBInfo): seq[common.file_info] =
