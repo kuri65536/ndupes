@@ -189,6 +189,7 @@ proc get_removes*(db: DBInfo): seq[common.file_info] =
         WHERE error < 1 and done < 1
         GROUP BY size, hash
         HAVING COUNT(*) > 1
+        ORDER BY lcnt DESC
         limit 1
     """
     debug("db:get_removes:find doubled files...")

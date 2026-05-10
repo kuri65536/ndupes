@@ -18,11 +18,22 @@ type
 proc dump(src, dst: common.file_info, f: bool): void =
     let st = if f: "!: " else: ".: "
     let (d, s) = (dst.path.string, src.path.string)
-    stdout.write("hardlink" & st & d & "<=" & s & "\n")
+    stdout.write("hardlink" & st & d & " <= " & s & "\n")
+
+
+proc dump2(src, dst: common.file_info): void =
+    let d = dst.path.string
+    stdout.write("hardlink-: " & d & " (same inode, skipped)\n")
 
 
 proc hardlink(tmp: db.DBInfo, src, dst: common.file_info,
               f_apply: bool): void =
+    if src.inode == dst.inode:
+        var wrk = dst
+        common.mark_done(wrk)
+        db.update(tmp, dst.uid, wrk)
+        dump2(src, dst)
+        return
     dump(src, dst, f_apply)
     var dst = dst
 
