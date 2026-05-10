@@ -14,6 +14,7 @@ import dumpdb
 import extract
 import dbif_sqlite as db
 import options
+import progress
 import removedups
 
 
@@ -44,7 +45,9 @@ proc run*(args: openarray[string]): int =
     info("mode: normal...")
 
     stdout.write("### phase 1: collect files...\n")
+    var stat: progress.prog_stat2
     for pi in walk(opts.paths):
+        stat = progress.show_collect(pi.f, stat)
         var fi1 = extract.extract1(pi.f, true)
         if isNil(fi1):
             continue
@@ -59,6 +62,7 @@ proc run*(args: openarray[string]): int =
         block:
             stdout.write("listup: detected as new one. " & pi.f.string & "\n")
             db.update(tmp, fi0.uid, fi1)
+    progress.end_collect()
 
     stdout.write("### phase 2: calculate hash...\n")
     let ret2 = calchash.run(tmp, (calc_method(opts.n_method), opts.size))

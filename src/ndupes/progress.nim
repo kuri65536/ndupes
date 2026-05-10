@@ -17,6 +17,11 @@ type
     tty, width: int
     cputime: float
 
+  prog_stat2* = object of RootObj
+    tty, width: int
+    count, prev_count: int
+    cputime, starttime: float
+
 let
     tty_none = 0
     tty_term = 1
@@ -28,6 +33,8 @@ let
               large_delta: 1000_000,
               pct_tty: 2,
               pct_log: 10, )
+    thcollect = (files: 100,
+                 sec: 2.0, )
 
 
 proc terminal_info(): tuple[ttytype, ttywidth: int] =
@@ -84,6 +91,17 @@ proc update_timing(cur, size: int, prev: prog_stat): prog_stat =
     result.update = false; return result
 
 
+proc truncate(prefix, path: string, termwidth: int): string =
+    let n_len = termwidth - len(prefix) - 1
+
+    result = path
+    if len(result) >= n_len:
+        result = path[^n_len .. ^1]
+        result = "..." & path[3 ..^ 1]
+
+    return prefix & result
+
+
 proc show_hash*(src: Path, cur, size: int, prev: prog_stat): prog_stat =
     ##[ show progress in hash calculation
     ]##
@@ -96,18 +114,58 @@ proc show_hash*(src: Path, cur, size: int, prev: prog_stat): prog_stat =
 
     var msg = $size
     msg = align($cur, len(msg)) & "/" & msg & pct
+    msg = truncate(msg, src.string, result.width)
 
-    let n_len = result.width - len(msg) - 1
-    var fn = src.string
-    if len(fn) >= n_len:
-        fn = fn[^n_len .. ^1]
-        fn = "..." & fn[3 ..^ 1]
-
-    msg &= fn
     if result.tty == tty_file:
         stderr.write(msg & "\n")
     else:
         stderr.write("\r\e[K" & msg)
         if dpct >= 1000:
             stderr.write("\n")
+
+
+proc ellapsed(cur, origin: float): string =
+    let delta0 = int64(cur - origin)
+    let days = delta0 div (24 * 3600)
+    let delta1 = delta0 mod (24 * 3600)
+    let hour = delta1 div 3600
+    let delta2 = delta1 mod 3600
+    let mins = delta2 div 60
+    let secs = delta2 mod 60
+    result = ""
+    if days > 0:
+        result &= $days & "d "
+    result &= align($hour, 2, '0') & ":" &
+              align($mins, 2, '0') & ":" & align($secs, 2, '0')
+
+
+proc show_collect*(src: Path, prev: prog_stat2): prog_stat2 =
+    ##[ show progress in collect files
+    ]##
+    result = prev
+    result.count += 1
+
+    let cur = times.cpuTime()
+    if prev.starttime < 1:  # first time
+        (result.tty, result.width) = terminal_info()
+        result.starttime = cur
+
+    if cur - result.cputime < thcollect.sec and
+       result.count != 1 and
+       result.count - result.prev_count < thcollect.files:
+        return result
+
+    let time = "(" & ellapsed(cur, result.starttime) & ")"
+    let count = "-" & align($result.count, 5) & " "
+    let msg = truncate(time & count, src.string, result.width)
+    if result.tty == tty_file:
+        stderr.write(msg & "\n")
+    else:
+        stderr.write("\r\e[K" & msg)
+
+    (result.prev_count, result.cputime) = (result.count, cur)
+
+
+proc end_collect*(): void =
+    stderr.write("\n")
 
