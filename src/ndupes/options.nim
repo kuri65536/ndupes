@@ -26,6 +26,7 @@ type
     tmpdb*: Path
     runflags*: set[run_options]
     verbosity*: int
+    f_progress*: bool
 
 
 proc parse_flag(src: set[run_options], opts: seq[string]): set[run_options] =
@@ -78,6 +79,7 @@ ndupes, Nim Duplicate File Eliminator
     -V, --version   show the tool version
     -v, --verbosity [0-70]  set log level  for debug, less for verbose
     --db [file]     specify DB file path
+    --progress [yes|no]     enable/disable progress on stderr (default: yes)
     --apply         making changes at hard-link process
     --dump          dump DB contents into stdout as CSV format
     --size [byte]   specify the limit of file size to eliminate
@@ -93,11 +95,13 @@ proc parseargs*(src: openarray[string]): Options =
     result = Options(
         size: 1_000_000,
         tmpdb: Path("ndupes.db"),
+        f_progress: true,
     )
     options_macro.parse_all(result, args,
         ('h', "--help", "true", parse_help, runflags),
         ('V', "--version", "true", parse_version, runflags),
         ('v', "--verbosity", "", parse_verbosity, verbosity),
+        (' ', "--progress", "", parse_bool_witharg, f_progress),
         (' ', "--vv", "30", parse_verbosity, verbosity),
         (' ', "--vvv", "20", parse_verbosity, verbosity),
         (' ', "--vvvv", "10", parse_verbosity, verbosity),

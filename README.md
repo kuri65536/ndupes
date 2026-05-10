@@ -142,7 +142,6 @@ while maximizing storage reclamation.
 -------------------------------
 - [ ] prevent across file-system: update database scheme to save device info
 - [ ] prevent across file-system: ignore directory across file-system
-- [ ] quiet option to reduce output for running like cron or no tty system
 - [ ] progress output in link proccess
 - [ ] restart from DB in collect process
 - [ ] restart from DB in hash process

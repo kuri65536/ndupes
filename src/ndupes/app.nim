@@ -45,7 +45,7 @@ proc run*(args: openarray[string]): int =
     info("mode: normal...")
 
     stdout.write("### phase 1: collect files...\n")
-    var stat: progress.prog_stat2
+    var stat = progress.prog_stat2(f_quiet: not opts.f_progress)
     for pi in walk(opts.paths):
         stat = progress.show_collect(pi.f, stat)
         var fi1 = extract.extract1(pi.f, true)
@@ -62,10 +62,11 @@ proc run*(args: openarray[string]): int =
         block:
             stdout.write("listup: detected as new one. " & pi.f.string & "\n")
             db.update(tmp, fi0.uid, fi1)
-    progress.end_collect()
+    progress.end_collect(stat.f_quiet)
 
     stdout.write("### phase 2: calculate hash...\n")
-    let ret2 = calchash.run(tmp, (calc_method(opts.n_method), opts.size))
+    let ret2 = calchash.run(tmp, (calc_method(opts.n_method), opts.size,
+                                  not opts.f_progress))
     if ret2 != 0 or opts.runflags.contains(until_hash):
         return ret2
 

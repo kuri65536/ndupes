@@ -16,11 +16,13 @@ type
     filepos: int
     tty, width: int
     cputime: float
+    f_quiet*: bool
 
   prog_stat2* = object of RootObj
     tty, width: int
     count, prev_count: int
     cputime, starttime: float
+    f_quiet*: bool
 
 let
     tty_none = 0
@@ -60,6 +62,9 @@ proc update_timing_time(tty: int, cur, prev: float): (bool, float) =
 
 proc update_timing(cur, size: int, prev: prog_stat): prog_stat =
     result = prev
+    if prev.f_quiet:
+        result.update = false; return result
+
     let curtime = times.cpuTime()
     if prev.tty <= tty_none:
         (result.tty, result.width) = terminal_info()
@@ -145,6 +150,9 @@ proc show_collect*(src: Path, prev: prog_stat2): prog_stat2 =
     result = prev
     result.count += 1
 
+    if prev.f_quiet:
+        return prev
+
     let cur = times.cpuTime()
     if prev.starttime < 1:  # first time
         (result.tty, result.width) = terminal_info()
@@ -166,6 +174,8 @@ proc show_collect*(src: Path, prev: prog_stat2): prog_stat2 =
     (result.prev_count, result.cputime) = (result.count, cur)
 
 
-proc end_collect*(): void =
+proc end_collect*(f_quiet: bool): void =
+    if f_quiet:
+        return
     stderr.write("\n")
 

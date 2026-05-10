@@ -18,10 +18,12 @@ else:
 
 
 type
-  optscalc* = tuple[n: common.calc_method, size: int]
+  optscalc* = tuple[n: common.calc_method, size: int,
+                    f_quiet: bool]
 
 
-proc filemd5*(src: Path, size: int, blk = 8192): array[32, uint8] =
+proc filemd5*(src: Path, size: int, f_quiet: bool,
+              blk = 8192): array[32, uint8] =
     debug("hash: enter, " & $size & ":" & src.string)
     var ctx: MD5Context
     md5.md5Init(ctx)
@@ -32,7 +34,7 @@ proc filemd5*(src: Path, size: int, blk = 8192): array[32, uint8] =
     defer: fp.close()
 
     var cur = 0
-    var stat: progress.prog_stat
+    var stat = progress.prog_stat(f_quiet: f_quiet)
     while true:
         var buf = newSeq[uint8](blk)
         let n = readBuffer(fp, addr(buf[0]), blk)
@@ -52,15 +54,16 @@ proc filemd5*(src: Path, size: int, blk = 8192): array[32, uint8] =
     debug("hash: end, " & $result[0] & $result[1] & $result[2])
 
 
-proc calc(src: Path, size: int, n: common.calc_method): array[32, uint8] =
+proc calc(src: Path, size: int, f_quiet: bool,
+          n: common.calc_method): array[32, uint8] =
     stdout.write("hash  : " & src.string & "\n")
     when defined(use_sha2):
         if n == method_sha256:
-            return filesha256(src)
+            return calcsha2.calc(src, size, f_quiet)
     else:
         if n == method_sha256:
             warn("specified: sha256 not enabled in build, fallback to md5")
-    return filemd5(src, size)
+    return filemd5(src, size, f_quiet)
 
 
 proc run*(src: db.DBInfo, opts: optscalc): int =
@@ -76,7 +79,7 @@ proc run*(src: db.DBInfo, opts: optscalc): int =
         if isNil(fi):
             break
         let hash = try:
-                calc(fi.path, fi.size, opts.n)
+                calc(fi.path, fi.size, opts.f_quiet, opts.n)
             except:
                 var tmp = fi
                 common.mark_error(tmp)
