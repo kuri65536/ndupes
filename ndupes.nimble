@@ -11,3 +11,7 @@ bin           = @["ndupes"]
 # Dependencies
 
 requires "nim >= 2.0.4"
+
+before build:
+    exec "nim c -o:bin/version -r src/ndupes/version.nim"
+

@@ -9,6 +9,7 @@ import std/strutils
 
 import common
 import options_macro
+import version
 
 
 type
@@ -59,6 +60,13 @@ proc parse_paths(src: seq[Path], opts: seq[string]): seq[Path] =
         result.add(Path(i))
 
 
+proc parse_version(src: set[run_options], opts: seq[string]): set[run_options] =
+    if len(opts) < 1:
+        return src
+    stdout.write("ndupes, duplicate file eliminator: " & version.version_string())
+    system.quit(1)
+
+
 proc parseargs*(src: openarray[string]): Options =
     var args: seq[string]
     for i in src:
@@ -68,6 +76,7 @@ proc parseargs*(src: openarray[string]): Options =
         tmpdb: Path("ndupes.db"),
     )
     options_macro.parse_all(result, args,
+        ('V', "--version", "true", parse_version, runflags),
         ('v', "--verbosity", "", parse_verbosity, verbosity),
         (' ', "--vv", "30", parse_verbosity, verbosity),
         (' ', "--vvv", "20", parse_verbosity, verbosity),

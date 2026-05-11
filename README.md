@@ -51,6 +51,48 @@ nice -n 19 ionice -c 3 ./ndupes /path/to/target/directory > ndupes.log
 ```
 
 
+⌨️ Command Line Options
+-------------------------------
+ndupes is designed to be simple and predictable.
+It accepts a target directory as a positional argument and supports
+the following flags:
+
+| Option | Long Flag  | Description |
+|--------|------------|-------------|
+| -h | --help         | Show the help message and exit. |
+| -V | --version      | Display the current version of ndupes. |
+| -v | --verbosity    | Specify the log output level (0-70) for debugging purpose |
+| .  | --apply        | Making changes |
+| .  | --db           | Specify statistic DB file name, default: ndupes.db in current dir. |
+| .  | --dump         | Dump DB contents into CSV |
+| .  | --cont-hash    | Run hash process using remained DB |
+| .  | --cont-link    | Run hardlink process using remained DB |
+| .  | --until-listup | Stop running after list-up process |
+| .  | --until-hash   | Stop running after hash process |
+| -q | --quiet        | (Under construction) Suppress the progress bar (useful for cron jobs/logs). |
+
+
+### Example Commands
+Standard execution with low priority:
+
+```bash
+nice -n 19 ionice -c 3 ./ndupes --apply /mnt/storage
+```
+
+Testing with a dry-run to see potential savings:
+
+```bash
+./ndupes /home/user/data
+./ndupes --dump
+```
+
+Running in a script and logging to a file:
+
+```bash
+./ndupes --quiet /data >> scan.log 2>&1
+```
+
+
 ⚙️ How it Works
 ----------------------
 1. Collect: Traverses the filesystem to gather metadata
@@ -79,6 +121,8 @@ The internal SQLite schema uses specialized indexes to ensure scalability:
     in a recoverable state in case of interruption.
 - ZRAM Synergy: Optimized to work alongside ZRAM to prevent
     physical swap thrashing on SD cards or HDDs.
+    In my case, Swap file on the same bus cause high I/O access and
+    freeze my system.
 
 
 ----
@@ -89,6 +133,20 @@ By linking to the file that already has the most links,
 we respect existing data structures and minimize the risk of hitting
 filesystem-specific hard link limits (e.g., 65,000 on ext4)
 while maximizing storage reclamation.
+
+
+---
+
+
+🏗️ Todos
+-------------------------------
+- [ ] prevent across file-system: update database scheme to save device info
+- [ ] prevent across file-system: ignore directory across file-system
+- [ ] help for options
+- [ ] help to show version string
+- [ ] improve hash to sha256
+- [ ] quiet option to reduce output for running like cron or no tty system
+
 
 
 ---
