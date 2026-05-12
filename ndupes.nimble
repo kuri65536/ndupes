@@ -12,6 +12,10 @@ bin           = @["ndupes"]
 
 requires "nim >= 2.0.4"
 
+when true:
+    switch("define", "use_sha2")
+    requires "checksums >= 0.2.2"
+
 before build:
     exec "nim c -o:bin/version -r src/ndupes/version.nim"
 

@@ -5,23 +5,20 @@ License: MIT, see LICENSE
 ]##
 import std/logging
 import std/paths
-import std/md5
-
-when defined(use_sha2):
-  import std/sha2
 
 import common
 import dbif_sqlite as db
 import progress
 
+when defined(use_sha2):
+  import checksums/md5
+  import calchash_sha256 as calcsha2
+else:
+  import std/md5
+
 
 type
   optscalc* = tuple[n: common.calc_method, size: int]
-
-
-when defined(use_sha2):
-  proc filesha256(src: Path): array[32, uint8] =
-    discard
 
 
 proc filemd5*(src: Path, size: int, blk = 8192): array[32, uint8] =
