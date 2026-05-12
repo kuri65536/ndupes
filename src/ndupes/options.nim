@@ -16,6 +16,7 @@ type
   run_options* = enum
     apply
     dump
+    until_collect
     until_hash
 
   Options* = ref object of RootObj
@@ -83,7 +84,8 @@ ndupes, Nim Duplicate File Eliminator
     --apply         making changes at hard-link process
     --dump          dump DB contents into stdout as CSV format
     --size [byte]   specify the limit of file size to eliminate
-    --until-hash:   stop running after hash process
+    --until-collect: stop after file collection phase (do not hash or link)
+    --until-hash:   stop after hashing phase (do not link)
     """)
     system.quit(1)
 
@@ -108,6 +110,7 @@ proc parseargs*(src: openarray[string]): Options =
         (' ', "--vvvvv", "0", parse_verbosity, verbosity),
         (' ', "--apply", $apply, parse_flag, runflags),
         (' ', "--dump", $dump, parse_flag, runflags),
+        (' ', "--until-collect", $until_collect, parse_flag, runflags),
         (' ', "--until-hash", $until_hash, parse_flag, runflags),
         (' ', "--db", "", parse_path, tmpdb),
         (' ', "--method", "", parse_method, n_method),
