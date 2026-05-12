@@ -67,6 +67,25 @@ proc parse_version(src: set[run_options], opts: seq[string]): set[run_options] =
     system.quit(1)
 
 
+proc parse_help(src: set[run_options], opts: seq[string]): set[run_options] =
+    if len(opts) < 1:
+        return src
+    stdout.write("""
+ndupes, Nim Duplicate File Eliminator
+  usage: ndupes [options] [path] [path] [path...]
+  option:
+    -h, --help      show this message
+    -V, --version   show the tool version
+    -v, --verbosity [0-70]  set log level  for debug, less for verbose
+    --db [file]     specify DB file path
+    --apply         making changes at hard-link process
+    --dump          dump DB contents into stdout as CSV format
+    --size [byte]   specify the limit of file size to eliminate
+    --until-hash:   stop running after hash process
+    """)
+    system.quit(1)
+
+
 proc parseargs*(src: openarray[string]): Options =
     var args: seq[string]
     for i in src:
@@ -76,6 +95,7 @@ proc parseargs*(src: openarray[string]): Options =
         tmpdb: Path("ndupes.db"),
     )
     options_macro.parse_all(result, args,
+        ('h', "--help", "true", parse_help, runflags),
         ('V', "--version", "true", parse_version, runflags),
         ('v', "--verbosity", "", parse_verbosity, verbosity),
         (' ', "--vv", "30", parse_verbosity, verbosity),
@@ -90,4 +110,6 @@ proc parseargs*(src: openarray[string]): Options =
         (' ', "--size", "", parse_int, size),
         (' ', "", "", parse_paths, paths),
     )
+    if len(result.paths) < 1:
+        discard parse_help({}, @["--help"])
 
