@@ -3,6 +3,7 @@
 
 License: MIT, see LICENSE
 ]##
+import std/logging
 import std/os
 import std/paths
 

@@ -28,19 +28,30 @@ proc run*(args: openarray[string]): int =
     info("mode: normal...")
 
     stdout.write("### phase 1: collect files...\n")
-    let ret1 = collectfiles.run(tmp, opts.paths, (not opts.f_progress, ))
-    if ret1 != 0 or opts.runflags.contains(until_collect):
-        return ret1
+    if   opts.runflags.contains(from_hash) or
+         opts.runflags.contains(from_link):
+        stdout.write("skipped..." & $opts.runflags)
+    else:
+        let ret1 = collectfiles.run(tmp, opts.paths, (not opts.f_progress, ))
+        if ret1 != 0:
+            return ret1
+    if opts.runflags.contains(until_collect):
+        stdout.write("exit." & $opts.runflags); return 0
 
     stdout.write("### phase 2: calculate hash...\n")
-    let ret2 = calchash.run(tmp, (calc_method(opts.n_method), opts.size,
-                                  not opts.f_progress))
-    if ret2 != 0 or opts.runflags.contains(until_hash):
-        return ret2
+    if opts.runflags.contains(from_link):
+        stdout.write("skipped..." & $opts.runflags)
+    else:
+        let ret2 = calchash.run(tmp, (calc_method(opts.n_method), opts.size,
+                                      not opts.f_progress))
+        if ret2 != 0:
+            return ret2
+    if opts.runflags.contains(until_hash):
+        stdout.write("exit." & $opts.runflags); return 0
 
     stdout.write("### phase 3: remove duplicates...\n")
     return removedups.run(tmp, (opts.runflags.contains(apply),
-                                opts.f_progress))
+                                not opts.f_progress))
 
 
 when isMainModule:

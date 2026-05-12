@@ -18,6 +18,8 @@ type
     dump
     until_collect
     until_hash
+    from_hash
+    from_link
 
   Options* = ref object of RootObj
     dumpflags*: set[dump_options]
@@ -86,6 +88,8 @@ ndupes, Nim Duplicate File Eliminator
     --size [byte]   specify the limit of file size to eliminate
     --until-collect: stop after file collection phase (do not hash or link)
     --until-hash:   stop after hashing phase (do not link)
+    --from-hash:    resume from hashing phase with existing DB
+    --from-link:    resume from linking phase use existing DB
     """)
     system.quit(1)
 
@@ -112,6 +116,8 @@ proc parseargs*(src: openarray[string]): Options =
         (' ', "--dump", $dump, parse_flag, runflags),
         (' ', "--until-collect", $until_collect, parse_flag, runflags),
         (' ', "--until-hash", $until_hash, parse_flag, runflags),
+        (' ', "--from-hash", $from_hash, parse_flag, runflags),
+        (' ', "--from-link", $from_link, parse_flag, runflags),
         (' ', "--db", "", parse_path, tmpdb),
         (' ', "--method", "", parse_method, n_method),
         (' ', "--size", "", parse_int, size),
