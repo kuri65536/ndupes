@@ -162,6 +162,20 @@ proc parse_false*(src: bool, args: seq[string]): bool =
     return len(args) < 1
 
 
+proc parse_bool_witharg*(src: bool, args: seq[string]): bool =
+    ##[
+    ]##
+    if len(args) < 1:
+        return src
+    for i in args:
+        let i = i.strip()
+        if ["on", "true", "yes"].contains(i):
+            return true
+        if ["off", "false", "no"].contains(i):
+            return false
+    return src
+
+
 proc parse_int*(src: int, args: seq[string]): int =
     ##[
     ]##
