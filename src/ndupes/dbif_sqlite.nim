@@ -197,22 +197,25 @@ proc update_hash_sameinode*(db: DBInfo, inode: int64, devid: int,
 proc get_removes*(db: DBInfo): seq[common.file_info] =
     ##[ - get unproc size and hash
     ]##
+    let hash0 = block:
+        var tmp: array[32, uint8]
+        hash2hex(tmp)
     let qry1 = """
         SELECT size, hash, devid FROM file
-        WHERE error < 1 and done < 1
+        WHERE error < 1 and done < 1 and hash != ?
         GROUP BY size, hash, devid
         HAVING COUNT(*) > 1
         ORDER BY MAX(lcnt) DESC
         limit 1
     """
     debug("db:get_removes:find doubled files...")
-    if not dbc.tryExec(db.conn, dbc.sql(qry1)):
+    if not dbc.tryExec(db.conn, dbc.sql(qry1), hash0):
         try:
             dbc.dbError(db.conn)
         except DBError:
             error(getCurrentExceptionMsg())
         return @[]
-    let size_hash = dbc.getRow(db.conn, dbc.sql(qry1))
+    let size_hash = dbc.getRow(db.conn, dbc.sql(qry1), hash0)
     if len(size_hash) < 1:
         return @[]
     let size = size_hash[0]
