@@ -118,10 +118,12 @@ macro parse_all*(obj: untyped, args: typed, parsers: varargs[untyped]): void =
 proc parse_verbosity*(src: int, args: seq[string]): int =
     ##[ setups the verbosity of the app console
     ]##
+    if len(logging.getHandlers()) < 1:
+        logging.setLogFilter(lvlWarn)
+        logging.addHandler(logging.newConsoleLogger())
+    if len(args) < 1:
+        return src
     let lvl = block:
-      if len(args) < 1:
-        lvlWarn
-      else:
         let n = try:   parseInt(args[0])
                 except ValueError: -1
         if   n >= 70:  lvlAll
@@ -143,10 +145,8 @@ proc parse_verbosity*(src: int, args: seq[string]): int =
           of "warning": lvlWarn
           of "warn": lvlWarn
           else:      lvlWarn
-    if src != int(lvl):
-        result = int(lvl)
-    if len(logging.getHandlers()) < 1:
-        logging.addHandler(logging.newConsoleLogger())
+    result = int(lvl)
+    debug("log-level was changed: " & $lvl)
     logging.setLogFilter(lvl)
 
 
