@@ -32,7 +32,8 @@ proc run*(args: openarray[string]): int =
          opts.runflags.contains(from_link):
         stdout.write("skipped..." & $opts.runflags)
     else:
-        let ret1 = collectfiles.run(tmp, opts.paths, (not opts.f_progress, ))
+        let ret1 = collectfiles.run(tmp, opts.paths,
+                                    (opts.minsize, not opts.f_progress, ))
         if ret1 != 0:
             return ret1
     if opts.runflags.contains(until_collect):

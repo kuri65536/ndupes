@@ -20,7 +20,7 @@ proc normalize_path(src: Path, f_abs: bool): Path =
     return src.relativePath(paths.getCurrentDir())
 
 
-proc extract1*(src: Path, f_abs: bool): common.file_info =
+proc extract1*(src: Path, f_abs: bool, minsize: int): common.file_info =
     ##[
     ]##
     let src = normalize_path(src, f_abs)
@@ -29,6 +29,9 @@ proc extract1*(src: Path, f_abs: bool): common.file_info =
     if fi.isSpecial:
         return nil
     if fi.kind in {pcLinkToFile, pcLinkToDir}:
+        return nil
+    if fi.size < minsize:
+        info("skip by " & $fi.size & " < " & $minsize & ": " & src.string)
         return nil
 
     return common.file_info(

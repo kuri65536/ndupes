@@ -26,6 +26,7 @@ type
     n_method*: common.calc_method
     paths*: seq[Path]
     size*: int
+    minsize*: int
     tmpdb*: Path
     runflags*: set[run_options]
     verbosity*: int
@@ -100,6 +101,7 @@ proc parseargs*(src: openarray[string]): Options =
         args.add(i)
     result = Options(
         size: 1_000_000,
+        minsize: 4192,
         tmpdb: Path("ndupes.db"),
         f_progress: true,
     )
@@ -121,6 +123,7 @@ proc parseargs*(src: openarray[string]): Options =
         (' ', "--db", "", parse_path, tmpdb),
         (' ', "--method", "", parse_method, n_method),
         (' ', "--size", "", parse_int, size),
+        (' ', "--min-size", "", parse_int, minsize),
         (' ', "", "", parse_paths, paths),
     )
     if len(result.paths) < 1:

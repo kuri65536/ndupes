@@ -16,7 +16,8 @@ import progress
 type
   path_info = tuple[f: Path]
 
-  optscol = tuple[f_quiet: bool]
+  optscol = tuple[minsize: int,
+                  f_quiet: bool]
 
 
 iterator walk(paths: openarray[Path]): path_info =
@@ -32,7 +33,7 @@ proc run*(db: dbif.DBInfo, paths: seq[Path], opts: optscol): int =
     var stat = progress.prog_stat2(f_quiet: opts.f_quiet)
     for pi in walk(paths):
         stat = progress.show_collect(pi.f, stat)
-        var fi1 = extract.extract1(pi.f, true)
+        var fi1 = extract.extract1(pi.f, true, opts.minsize)
         if isNil(fi1):
             continue
         let fi0 = dbif.load(db, fi1.path)

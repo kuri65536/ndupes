@@ -142,8 +142,6 @@ while maximizing storage reclamation.
 -------------------------------
 - [ ] prevent across file-system: update database scheme to save device info
 - [ ] prevent across file-system: ignore directory across file-system
-- [ ] progress output in link proccess
-- [ ] ignore small size files
 
 
 
