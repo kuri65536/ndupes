@@ -140,8 +140,10 @@ while maximizing storage reclamation.
 
 🏗️ Todos
 -------------------------------
-- [ ] prevent across file-system: update database scheme to save device info
-- [ ] prevent across file-system: ignore directory across file-system
+- [ ] show the total time to log (collect phase)
+- [ ] show the total time to log (hash phase)
+- [ ] show the total time to log (link phaes)
+- [ ] error handling in link phase
 
 
 

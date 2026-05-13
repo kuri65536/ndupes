@@ -91,6 +91,6 @@ proc run*(src: db.DBInfo, opts: optscalc): int =
             tmp.hash = hash
             db.update(src, fi.uid, tmp)
 
-        discard db.update_hash_sameinode(src, fi.inode, fi.hash)
+        discard db.update_hash_sameinode(src, fi.inode, fi.devid, fi.hash)
     return 0
 

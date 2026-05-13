@@ -25,6 +25,7 @@ type
     size*: int64
     count*: int
     inode*: int64
+    devid*: int
     head*: int32
     tail*: int32
     hash*: array[32, uint8]
@@ -53,16 +54,17 @@ proc newFileinfo*(src: openarray[string]): file_info =
     ]##
     result = file_info(
         inode: parseInt(src[1]),
-        size: parseInt(src[2]),
-        count: parseInt(src[3]),
-        head: int32(parseInt(src[4])),
-        tail: int32(parseInt(src[5])),
-        error: int8(parseInt(src[7]) and 0x7F),
-        done: int8(parseInt(src[8]) and 0x7F),
-        path: Path(src[9]),
+        devid: int32(parseInt(src[2])),
+        size: parseInt(src[3]),
+        count: parseInt(src[4]),
+        head: int32(parseInt(src[5])),
+        tail: int32(parseInt(src[6])),
+        error: int8(parseInt(src[8]) and 0x7F),
+        done: int8(parseInt(src[9]) and 0x7F),
+        path: Path(src[10]),
     )
     get_hex(array[16, uint8](result.uid), src[0])
-    get_hex(result.hash, src[6])
+    get_hex(result.hash, src[7])
 
 
 proc equals*(a, b: file_info): bool =
@@ -74,6 +76,8 @@ proc equals*(a, b: file_info): bool =
     debug("scan:equals:" & $a.inode & " vs " & $b.inode)
     if a.inode != b.inode:
         debug("listup:equals: != inode"); return false
+    if a.devid != b.devid:
+        debug("listup:equals: != devid"); return false
     if a.size != b.size:
         debug("listup:equals: != size"); return false
     if a.count != b.count:

@@ -15,14 +15,16 @@ proc dumprec(src: common.file_info, opts: set[common.dump_options]): void =
         return toHex(s[0], 2) & toHex(s[1], 2) & toHex(s[2], 2) &
                toHex(s[3], 2) & toHex(s[4], 2) & toHex(s[5], 2)
     proc path_fmt(s: Path): string =
+        const width = 20
         let p = s.string
-        result = if p.len > 30: p[^30 ..^ 1] else: p
-        result = align(result, 30)
+        result = if p.len > width: p[^width ..^ 1] else: p
+        result = align(result, width)
 
     var line = ""
     line &= ", " & align($src.size, 10)
     line &= ", " & align($src.count, 6)
     line &= ", " & align($src.inode, 6)
+    line &= ", " & align($src.devid, 10)
     line &= ", " & short_hash(src.hash)
     line &= ", " & align($src.error, 2)
     line &= ", " & align($src.done, 2)

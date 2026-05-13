@@ -42,6 +42,7 @@ proc has_table*(conn: dbc.DbConn): bool =
         create table file (
             uid blob primary key,
             inode integer,
+            devid integer,
             size integer,
             lcnt integer,
             chrh integer,
@@ -52,7 +53,8 @@ proc has_table*(conn: dbc.DbConn): bool =
             path text not null
         ) without rowid""")
     dbc.exec(conn, dbc.sql"""
-        create index idx_file_size_hash ON file (size, hash);
+        create index idx_hash_phase ON file (size, hash, devid);
+        create index idx_link_phase ON file (size, devid);
         create index idx_file_hash ON file (hash);
         create index idx_file_path ON file (path);
         """)
@@ -80,12 +82,20 @@ proc save*(db: DBInfo, src: var common.file_info): void =
     let hs = hash2hex(src.hash)
     dbc.exec(db.conn, sql"""
         INSERT INTO file values(
-            ?, ?, ?, ?,
+            ?,
             ?, ?,
-            ?, ?, ?, ?)""",
-        id, src.inode, src.size, src.count,
+            ?, ?,
+            ?, ?,
+            ?,
+            ?, ?,
+            ?)""",
+        id,
+        src.inode, src.devid,
+        src.size, src.count,
         src.head, src.tail,
-        hs, src.error, src.done, src.path.string
+        hs,
+        src.error, src.done,
+        src.path.string
     )
 
 
@@ -95,12 +105,12 @@ proc update*(db: DBInfo, uid: uid_type, src: common.file_info): void =
         no update with uid and path
     ]##
     dbc.exec(db.conn, sql"""
-        update file set inode = ?, size = ?, lcnt = ?,
+        update file set inode = ?, devid = ?, size = ?, lcnt = ?,
                         chrh = ?, chrt = ?, hash = ?,
                         error = ?, done = ?
                where uid = ?
         """,
-        src.inode, src.size, src.count,
+        src.inode, src.devid, src.size, src.count,
         src.head, src.tail, hash2hex(src.hash),
         src.error, src.done,
         uid2hex(uid)
@@ -133,14 +143,16 @@ proc get_unhash*(db: DBInfo, size: int): common.file_info =
     let hash = block:
         var tmp: array[32, uint8]
         hash2hex(tmp)
+    #ebug("db:get_unhash: hash0 = " & $hash)
     let qry = """
         SELECT * FROM file
         WHERE size >= ?
           AND hash = ?
           AND error < 1
-          AND size IN (
-            SELECT size FROM file GROUP BY size
-            HAVING COUNT(*) > 1
+          AND (size, devid) IN (
+            SELECT size, devid FROM file
+            GROUP BY size, devid
+            HAVING COUNT(DISTINCT inode) > 1
           )
         GROUP BY inode
         ORDER BY size
@@ -154,13 +166,14 @@ proc get_unhash*(db: DBInfo, size: int): common.file_info =
         return nil
     let x = dbc.getRow(db.conn, dbc.sql(qry), size, hash)
     if len(x) < 1 or len(x[0]) < 1:
+        debug("db:get_unhash: no record, " & $x)
         return nil
     debug("db:get_unhash:got" & $x)
     return common.newFileInfo(x)
 
 
-proc update_hash_sameinode*(db: DBInfo, inode: int, hash: array[32, uint8]
-                            ): int =
+proc update_hash_sameinode*(db: DBInfo, inode: int64, devid: int,
+                            hash: array[32, uint8]): int =
     ##[
     ]##
     let hash0 = block:
@@ -170,9 +183,9 @@ proc update_hash_sameinode*(db: DBInfo, inode: int, hash: array[32, uint8]
     let qry = """
         UPDATE file
           SET hash = ?
-          WHERE inode = ? AND hash = ?
+          WHERE inode = ? AND devid = ? AND hash = ?
     """
-    if not dbc.tryExec(db.conn, dbc.sql(qry), hash_new, inode, hash0):
+    if not dbc.tryExec(db.conn, dbc.sql(qry), hash_new, inode, devid, hash0):
         try:
             dbc.dbError(db.conn)
         except DBError:
@@ -185,11 +198,11 @@ proc get_removes*(db: DBInfo): seq[common.file_info] =
     ##[ - get unproc size and hash
     ]##
     let qry1 = """
-        SELECT size, hash FROM file
+        SELECT size, hash, devid FROM file
         WHERE error < 1 and done < 1
-        GROUP BY size, hash
+        GROUP BY size, hash, devid
         HAVING COUNT(*) > 1
-        ORDER BY lcnt DESC
+        ORDER BY MAX(lcnt) DESC
         limit 1
     """
     debug("db:get_removes:find doubled files...")
@@ -204,16 +217,18 @@ proc get_removes*(db: DBInfo): seq[common.file_info] =
         return @[]
     let size = size_hash[0]
     let hash = size_hash[1]
-    if len(size) < 1 or len(hash) < 1:
+    let devid = size_hash[2]
+    if len(size) < 1 or len(hash) < 1 or len(devid) < 1:
+        #ebug("db:get_removes: no record, " & $size_hash)
         return @[]
     debug("db:get_removes:found doubled..." & size & "-" & hash)
 
     let qry2 = """
         SELECT * FROM file
-        WHERE size = ? and hash = ?
+        WHERE size = ? and hash = ? and devid = ?
     """
     result = @[]
-    for x in dbc.fastRows(db.conn, dbc.sql(qry2), size, hash):
+    for x in dbc.fastRows(db.conn, dbc.sql(qry2), size, hash, devid):
         let fi = common.newFileInfo(x)
         result.add(fi)
 
