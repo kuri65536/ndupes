@@ -140,7 +140,6 @@ while maximizing storage reclamation.
 
 🏗️ Todos
 -------------------------------
-- [ ] error handling in link phase
 
 
 

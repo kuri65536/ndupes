@@ -38,10 +38,20 @@ proc hardlink(tmp: db.DBInfo, src, dst: common.file_info,
     dump(src, dst, f_apply)
     var dst = dst
 
-    if f_apply:
-        files.removeFile(dst.path)
-        os.createHardlink(src.path.string, dst.path.string)
+    if not f_apply:
+        common.mark_done(dst)
+        db.update(tmp, dst.uid, dst)
+        return
 
+    let f_done = try:
+            files.removeFile(dst.path)
+            os.createHardlink(src.path.string, dst.path.string)
+            true
+        except OSError:
+            error("hardlink: failed " & getCurrentExceptionMsg())
+            common.mark_error(dst)
+            false
+    if f_done:
         src.count += 1
         db.update(tmp, src.uid, src)
 
