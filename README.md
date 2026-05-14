@@ -140,9 +140,6 @@ while maximizing storage reclamation.
 
 🏗️ Todos
 -------------------------------
-- [ ] show the total time to log (collect phase)
-- [ ] show the total time to log (hash phase)
-- [ ] show the total time to log (link phaes)
 - [ ] error handling in link phase
 
 

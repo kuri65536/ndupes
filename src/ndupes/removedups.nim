@@ -54,7 +54,7 @@ proc hardlink(tmp: db.DBInfo, src, dst: common.file_info,
 proc run*(src: db.DBInfo, opts: optsrem): int =
     ##[ remove files and create hardlinks instead of them
     ]##
-    var stat = progress.prog_stat2(f_quiet: opts.f_quiet)
+    var stat = progress.initProgStat2(opts.f_quiet)
     while true:
         let fis = db.get_removes(src)
         if len(fis) < 2:
@@ -63,5 +63,5 @@ proc run*(src: db.DBInfo, opts: optsrem): int =
         for fi in fis[1 ..^ 1]:
             stat = progress.show_collect(fi.path, stat)
             hardlink(src, f0, fi, opts.f_apply)
-    progress.end_collect(stat.f_quiet)
+    progress.end_collect(stat, "linking phase ")
 

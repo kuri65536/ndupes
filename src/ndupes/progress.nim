@@ -39,6 +39,11 @@ let
                  sec: 2.0, )
 
 
+proc initProgStat2*(f_quiet: bool): prog_stat2 =
+    return prog_stat2(starttime: times.cpuTime(),
+                      f_quiet: f_quiet, )
+
+
 proc terminal_info(): tuple[ttytype, ttywidth: int] =
     if not terminal.isatty(stderr):
         return (tty_file, tty_width_default)
@@ -174,8 +179,10 @@ proc show_collect*(src: Path, prev: prog_stat2): prog_stat2 =
     (result.prev_count, result.cputime) = (result.count, cur)
 
 
-proc end_collect*(f_quiet: bool): void =
-    if f_quiet:
+proc end_collect*(stat: prog_stat2, pfx: string): void =
+    let cur = times.cpuTime()
+    stdout.write(pfx & "finished (" & ellapsed(cur, stat.starttime) & ")\n")
+    if stat.f_quiet:
         return
     stderr.write("\n")
 

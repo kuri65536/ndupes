@@ -52,7 +52,7 @@ iterator walk(paths: openarray[Path]): path_info =
 
 
 proc run*(db: dbif.DBInfo, paths: seq[Path], opts: optscol): int =
-    var stat = progress.prog_stat2(f_quiet: opts.f_quiet)
+    var stat = progress.initProgStat2(opts.f_quiet)
     for pi in walk(paths):
         stat = progress.show_collect(pi.f, stat)
         var fi1 = extract.extract1(pi.f, true, opts.minsize)
@@ -69,5 +69,5 @@ proc run*(db: dbif.DBInfo, paths: seq[Path], opts: optscol): int =
         block:
             stdout.write("listup: detected as new one. " & pi.f.string & "\n")
             dbif.update(db, fi0.uid, fi1)
-    progress.end_collect(stat.f_quiet)
+    progress.end_collect(stat, "collecting phase ")
 

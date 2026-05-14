@@ -74,6 +74,7 @@ proc run*(src: db.DBInfo, opts: optscalc): int =
         - get just one file from DB per loop
         - calculate hash with blocksize reading
     ]##
+    let stat = progress.initProgStat2(opts.f_quiet)
     while true:
         let fi = db.get_unhash(src, opts.size)
         if isNil(fi):
@@ -92,5 +93,6 @@ proc run*(src: db.DBInfo, opts: optscalc): int =
             db.update(src, fi.uid, tmp)
 
         discard db.update_hash_sameinode(src, fi.inode, fi.devid, fi.hash)
+    progress.end_collect(stat, "hasing phase ")
     return 0
 
