@@ -4,6 +4,7 @@
 License: MIT, see LICENSE
 ]##
 import std/dirs
+import std/logging
 import std/os
 import std/paths
 
@@ -25,8 +26,29 @@ iterator walk(paths: openarray[Path]): path_info =
         if os.fileExists(path.string):
             yield (path, )
             continue
-        for i in dirs.walkDirRec(path):
-            yield (i, )
+
+        if not os.dirExists(path.string):
+            continue
+
+        let root_device = os.getFileInfo(path.string, false).id.device
+        var stack = @[path]
+        while len(stack) > 0:
+            let cur = stack.pop()
+            try:
+                for (k, i) in dirs.walkDir(cur):
+                    if k == pcFile:
+                        yield (i, )
+                        continue
+                    if k == pcDir:
+                        let devid = os.getFileInfo(i.string, false).id.device
+                        if devid == root_device:
+                            stack.add(i)
+                            continue
+                        info("listup: ignored defference device " & i.string)
+                        continue
+                    debug("listup: ignored " & i.string & "(" & $k & ")")
+            except OSError:
+                error("listup: skip " & getCurrentExceptionMsg())
 
 
 proc run*(db: dbif.DBInfo, paths: seq[Path], opts: optscol): int =
