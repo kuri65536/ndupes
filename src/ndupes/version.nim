@@ -12,10 +12,10 @@ when isMainModule:
 
 const
   ver* = 0
-  maj* = 1
+  maj* = 2
   min* = 0
-  num* = 31
-  hash* = "b2d5d55"
+  num* = 45
+  hash* = "65f3777"
 
 
 proc version_string*(): string =
@@ -27,20 +27,20 @@ when isMainModule:
     var vers: seq[tuple[ver, maj, min: int]]
     for tag in src.split("\n"):
         let tag = tag.strip()
-        debug(tag)
+        debug("found tag:" & tag)
         if not tag.startsWith("v"): continue
-        debug(tag[1 ..^ 1])
+        debug("remove prefix: " & tag[1 ..^ 1])
         let tmp = tag[1 ..^ 1].split(".")
-        debug($tmp)
+        debug("split ver,maj,min: " & $tmp)
         if len(tmp) != 3: continue
         let ver = try:   parseInt(tmp[0])
-                  except ValueError: continue
+                  except ValueError: 99
         let maj = try:   parseInt(tmp[1])
-                  except ValueError: continue
+                  except ValueError: 99
         let min = try:   parseInt(tmp[2])
-                  except ValueError: continue
+                  except ValueError: 99
         vers.add((ver, maj, min))
-    debug(vers)
+    debug("got versions: " & $vers)
     if len(vers) < 1:
         return (0, 0, 0)
     vers.sort(proc(a, b: tuple[ver, maj, min: int]): int =
@@ -49,7 +49,7 @@ when isMainModule:
         let cj = cmp(a.maj, b.maj)
         if cj != 0: return cj
         return cmp(a.min, b.min))
-    debug(vers[^1])
+    debug("latest version: " & $vers[^1])
     return vers[^1]
 
 
