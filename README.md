@@ -1,7 +1,7 @@
 ndupes (Nim Duplicate File Eliminator)
 =================================================
 A minimalist, high-efficiency duplicate file management tool
-designed for extreme memory-constrained environments (Target: 3.2MB RAM).
+designed for extreme memory-constrained environments. (RAM 200-500MB)
 
 
 🚀 Overview
@@ -9,7 +9,7 @@ designed for extreme memory-constrained environments (Target: 3.2MB RAM).
 ndupes scans a directory and consolidates duplicate files using hard links.
 
 Unlike traditional tools, it is optimized for systems where
-memory and I/O are precious resources
+memory and I/O are limited resources
 (e.g., Raspberry Pi, home servers with massive HDD arrays).
 
 
@@ -138,9 +138,33 @@ while maximizing storage reclamation.
 ---
 
 
+📊 Actual Memory Usage
+----------------------------
+Here is the running log on reducing 500GB HDD content
+in my Raspberry Pi 3B+ server (1GB RAM):
+
+| run | time  | memory usage | ndupes progress  |
+|---|---------|--------------|-------------------|
+| 1 |   1h35m | 5.2MB        | collecting 5,000 files |
+| 2 |     12m | 7.0MB        | collecting 1,000 files |
+| 2 |1d23h31m | 10.7MB       | collecting 160,000 files |
+| 2 |3d18h37m | 34.7MB       | collecting 300,000 files |
+| 2 |5d 3h58m | 46MB         | calculate 18,339 files hash |
+| 2 |6d 2h48m | 76.3MB       | calculate 22,331 files hash |
+
+
+**Note:** Run #2 is v0.1.0. Even when handling 500GB of storage,
+memory usage is strictly capped under 50.0MB thanks to Nim's efficient
+memory management and SQLite's optimized page cache.
+
+
+---
+
+
 🏗️ Todos
 -------------------------------
-
+- [ ] add DB index to speed up for query during hashing
+- [ ] add DB index to speed up for query during linking
 
 
 ---
