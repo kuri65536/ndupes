@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.2.0"
+version       = "0.2.1"
 author        = "shimoda"
 description   = "A lightweight duplicate file manager optimized for memory-constrained systems"
 license       = "MIT"
@@ -11,6 +11,7 @@ bin           = @["ndupes"]
 # Dependencies
 
 requires "nim >= 2.0.4"
+requires "db_connector >= 0.1.0"
 
 when true:
     switch("define", "use_sha2")

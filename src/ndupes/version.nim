@@ -13,9 +13,9 @@ when isMainModule:
 const
   ver* = 0
   maj* = 2
-  min* = 0
-  num* = 45
-  hash* = "65f3777"
+  min* = 1
+  num* = 49
+  hash* = "ac40b1a"
 
 
 proc version_string*(): string =
