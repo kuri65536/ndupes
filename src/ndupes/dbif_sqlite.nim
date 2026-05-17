@@ -3,10 +3,11 @@
 
 License: MIT, see LICENSE
 ]##
-import std/db_sqlite as dbc
 import std/logging
 import std/paths
 import std/strutils
+
+import db_connector/db_sqlite as dbc
 
 import common as common
 import uuidv7 as uid

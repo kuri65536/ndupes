@@ -3,6 +3,9 @@ ndupes (Nim Duplicate File Eliminator)
 A minimalist, high-efficiency duplicate file management tool
 designed for extreme memory-constrained environments. (RAM 200-500MB)
 
+[![CI to build deb package](https://github.com/kuri65536/ndupes/actions/workflows/deb.yml/badge.flow.png)]
+(https://github.com/kuri65536/ndupes/actions/workflows/deb.yml)
+
 
 🚀 Overview
 ----------------------

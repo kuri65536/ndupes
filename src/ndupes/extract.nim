@@ -37,8 +37,8 @@ proc extract1*(src: Path, f_abs: bool, minsize: int): common.file_info =
     return common.file_info(
         size: fi.size,
         count: fi.linkCount,
-        inode: fi.id.file,
-        devid: fi.id.device,
+        inode: int64(fi.id.file),
+        devid: int(fi.id.device),
         path: src,
     )
 

@@ -1,3 +1,9 @@
+ndupes (0.2-1) UNRELEASED; urgency=low
+
+  * Update build files
+
+ -- shimoda <kuri65536@hotmail.com>  Sun, 17 May 2026 09:53:00 +0900
+
 ndupes (0.2-0) UNRELEASED; urgency=low
 
   * Initial release.
