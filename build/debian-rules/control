@@ -1,0 +1,24 @@
+Source: ndupes
+Section: utils
+Priority: optional
+Maintainer: shimoda <kuri65536@hotmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.5.1
+Homepage: https://github.com/kuri65536/ndupes
+Vcs-Git: https://github.com/kuri65536/ndupes.git
+Vcs-Browser: https://github.com/kuri65536/ndupes
+Rules-Requires-Root: binary-targets
+
+Package: ndupes
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, libsqlite3-0
+Description: Duplicate file eliminator tool for low memory system
+ A minimalist, high-efficiency duplicate file eliminator tool
+ designed for memory-constrained environments (Target: 200-500MB RAM).
+ .
+ ndupes scans a directory and consolidates duplicate files using hard links.
+ Unlike traditional tools, it is optimized for systems where
+ memory and I/O are limited resources
+ (e.g., Raspberry Pi, home servers with massive HDD arrays).
+

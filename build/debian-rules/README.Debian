@@ -1,0 +1,25 @@
+ndupes for Debian
+-----------------
+
+This package contains the ndupes duplicate file eliminator, optimized for
+memory-constrained environments such as Raspberry Pi and home servers.
+
+Debian-specific notes for this package:
+
+1. Runtime Dependency on SQLite
+   ndupes uses a delayed runtime loading mechanism (dlopen) for SQLite.
+   While 'ldd' may not show a direct link to libsqlite3, this package
+   explicitly depends on 'libsqlite3-0'. If you face any database issues,
+   ensure your system's SQLite3 libraries are fully up to date.
+
+2. Filesystem & Hard Link Limitations
+   Since ndupes consolidates duplicate files by creating hard links, please
+   keep the following in mind:
+   - Hard links can only be created within the same filesystem (partition).
+     It cannot cross over different mount points.
+   - Filesystems like ext4 have an upper limit on the maximum number of
+     hard links per file (typically 65,000). While normal use will not
+     reach this limit, massive automated link creation might trigger
+     filesystem constraints.
+
+ -- shimoda <kuri65536@hotmail.com>  Sun, 17 May 2026 11:05:00 +0900
